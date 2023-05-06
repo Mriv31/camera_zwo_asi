@@ -1,7 +1,10 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
-#include "zwo_asi/camera.hpp"
+#include "zwo_asi/VideoThread.hpp"
+
+// #include "tracking/Tracker.hpp"
+
 
 using namespace zwo_asi;
 
@@ -9,6 +12,26 @@ void capture(Camera& camera, pybind11::array_t<unsigned char>& image, int image_
 {
   pybind11::buffer_info buffer = image.request();
   camera.capture((unsigned char*)buffer.ptr, image_size);
+}
+
+//The following function allows to register a buffer from a numpy array
+//To call several times to incraese the buffer size
+void addBuffer(VideoThread& vt, pybind11::array_t<unsigned char>& image, int image_size)
+{
+  pybind11::buffer_info buffer = image.request();
+  vt.addBuffer((unsigned char*)buffer.ptr, image_size);
+}
+
+//The following function allows to send a shared int from a numpy array, on which
+// the C++ code will add 1 when a new image is captured.
+// Note the long int which means that the numpy array must be declared in int64.
+// If not it will send a copy to that function and the C++ code won't modify it.
+// Not sure about how to make this int thread safe, so please only read it from Python so far.
+// The Tracker will read it to see if it is up-to-date ..
+void define_image_counter(VideoThread& vt, pybind11::array_t<long int>& counter, int size)
+{
+  pybind11::buffer_info buffer = counter.request();
+  vt.define_image_counter((long int*)buffer.ptr, size);
 }
 
 PYBIND11_MODULE(bindings, m)
@@ -43,7 +66,7 @@ PYBIND11_MODULE(bindings, m)
     .value("soft_level", soft_level)
     .value("high_level", high_level)
     .value("low_level", low_level);
-    
+
   pybind11::class_<ControllableException>(m, "ControllableException")
     .def(pybind11::init<std::string,long,long,long>())
     .def(pybind11::init<std::string,bool,bool,bool>());
@@ -67,7 +90,7 @@ PYBIND11_MODULE(bindings, m)
     .def_readwrite("bins",&ROI::bins)
     .def_readwrite("type",&ROI::type)
     .def("valid",&ROI::valid);
-  
+
   pybind11::class_<CameraInfo>(m,"CameraInfo")
     .def_readonly("name",&CameraInfo::name)
     .def_readonly("camera_id",&CameraInfo::camera_id)
@@ -87,7 +110,7 @@ PYBIND11_MODULE(bindings, m)
     .def_readonly("bit_depth",&CameraInfo::bit_depth)
     .def_readonly("is_trigger",&CameraInfo::is_trigger)
     .def("__str__",&CameraInfo::to_string);
-    
+
   pybind11::class_<CameraException>(m, "CameraException")
     .def(pybind11::init<std::string,int,ASI_ERROR_CODE,bool>());
 
@@ -95,7 +118,7 @@ PYBIND11_MODULE(bindings, m)
   m.def("get_sdk_version", &get_sdk_version);
   m.def("close_camera", &close_camera);
   m.def("create_udev_file", &internal::create_udev_file);
-  
+
   pybind11::class_<Camera>(m, "Camera")
     .def(pybind11::init<int>())
     .def("set_roi", &Camera::set_roi)
@@ -110,4 +133,12 @@ PYBIND11_MODULE(bindings, m)
     .def("disable_dark_substract", &Camera::disable_dark_substract)
     .def("get_info", &Camera::get_info)
     .def("capture", &capture);
+
+  pybind11::class_<VideoThread>(m, "VideoThread")
+  .def(pybind11::init<Camera*>())
+  .def("addBuffer",&addBuffer)
+  .def("define_image_counter",&define_image_counter)
+  .def("Start",&VideoThread::Start)
+  ;
+
 }

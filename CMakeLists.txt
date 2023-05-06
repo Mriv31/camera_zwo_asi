@@ -1,11 +1,15 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(zwo_asi VERSION 0.1)
+set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_C_EXTENSIONS OFF)
+set(CMAKE_C_EXTENSIONS ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+#set(CMAKE_CXX_FLAGS_DEBUG "-g")
+#set(CMAKE_C_FLAGS_DEBUG "-g")
+#add_compile_options(-ggdb3)
 
 # Common installation directories
 include(GNUInstallDirs)
@@ -22,6 +26,7 @@ find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
 find_package(USB REQUIRED)
 find_package(Threads REQUIRED)
+
 
 
 ##########################
@@ -43,7 +48,7 @@ endif()
 # ZWO library                                     #
 ###################################################
 
-add_library(zwo_asi 
+add_library(zwo_asi
   src/utils.cpp
   src/camera_exception.cpp
   src/controllable.cpp
@@ -56,14 +61,23 @@ add_library(zwo_asi
   src/camera_mode.cpp
   src/guide_direction.cpp
   src/camera.cpp
+  src/VideoThread.cpp
   )
+
 add_library(zwo_asi::zwo_asi ALIAS zwo_asi)
+
 target_include_directories(zwo_asi PUBLIC
    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-   ${ASI_INCLUDE_DIR} 
+   ${ASI_INCLUDE_DIR}
    )
+ #target_include_directories(Tracker PUBLIC
+   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/tracking>
+  # $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+# )
  target_link_libraries(zwo_asi ${LIBASICAMERA_PATH} ${LIBUSB_LIBRARIES} Threads::Threads)
+ #target_link_libraries(Tracker Threads::Threads m zwo_asi) ##ADDED MR
 
 #################################
 # python bindings over zwo_asi #
@@ -80,7 +94,7 @@ set_target_properties(pybind11_bindings PROPERTIES
   OUTPUT_NAME "bindings"
   )
 target_link_libraries(pybind11_bindings
-  PUBLIC zwo_asi::zwo_asi ${LIBASICAMERA_PATH}
+  PUBLIC  zwo_asi::zwo_asi ${LIBASICAMERA_PATH}  #MODIFIED MR
   )
 
 ###########
@@ -88,7 +102,7 @@ target_link_libraries(pybind11_bindings
 ###########
 
 install(
-    TARGETS zwo_asi 
+    TARGETS zwo_asi  #MODIFIED MR
     EXPORT zwo_asiTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
@@ -103,5 +117,3 @@ install(
     ARCHIVE DESTINATION ${ASI_CAMS_INSTALL_PREFIX}
     RUNTIME DESTINATION ${ASI_CAMS_INSTALL_PREFIX}
     )
-
-  

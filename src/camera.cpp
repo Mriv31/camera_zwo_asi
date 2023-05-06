@@ -236,7 +236,7 @@ std::string Camera::to_string() const
     internal::fix_lengths(min_values, min_values_max + 2);
     int max_values_max = internal::max_size(max_values);
     internal::fix_lengths(max_values, max_values_max + 2);
-    
+
     // string buffer
     std::ostringstream s;
 
@@ -378,10 +378,34 @@ void Camera::set_roi(const ROI& roi)
     }
 }
 
+void Camera::start_video_capture()
+{
+  ASI_ERROR_CODE error = ASIStartVideoCapture(camera_index_);
+  if (error != ASI_SUCCESS)
+  {
+      throw CameraException("failed to start the video", camera_index_, error);
+  }
+
+
+}
+
+int Camera::get_video_data(unsigned char* buffer, int buffer_size,int wait_ms)
+{
+  long int bs = (long int) buffer_size;
+  ASI_ERROR_CODE error = ASIGetVideoData(camera_index_, buffer,bs, wait_ms);
+  if (error != ASI_SUCCESS) return 1;
+  else return 0;
+}
+
 const CameraInfo& Camera::get_info() const
 {
     return camera_info_;
 }
+
+
+
+
+
 
 void Camera::capture(unsigned char* buffer, int image_size)
 {

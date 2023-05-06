@@ -29,9 +29,13 @@ public:
     void disable_dark_substract();
     std::string to_string() const;
     void capture(unsigned char* buffer, int image_size);
+    void start_video_capture();
+    int get_video_data(unsigned char* buffer, int buffer_size,int wait_ms);
     const CameraInfo& get_info() const;
     void configure(ROI roi, std::map<std::string, Controllable>);
     void set_roi(const ROI& roi);
+
+
 
 private:
     const ASI_CONTROL_CAPS& get_control_caps(std::string control) const;
@@ -43,10 +47,12 @@ private:
     void read_control_caps(
         std::map<std::string, std::shared_ptr<ASI_CONTROL_CAPS>>& controls);
 
+
 private:
     CameraInfo camera_info_;
     int camera_index_;
     std::map<std::string, std::shared_ptr<ASI_CONTROL_CAPS>> controls_;
+
 };
 
 }  // namespace zwo_asi

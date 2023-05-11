@@ -28,10 +28,16 @@ void addBuffer(VideoThread& vt, pybind11::array_t<unsigned char>& image, int ima
 // If not it will send a copy to that function and the C++ code won't modify it.
 // Not sure about how to make this int thread safe, so please only read it from Python so far.
 // The Tracker will read it to see if it is up-to-date ..
-void define_image_counter(VideoThread& vt, pybind11::array_t<long int>& counter, int size)
+void define_image_counter(VideoThread& vt, pybind11::array_t<int>& counter, int size)
 {
   pybind11::buffer_info buffer = counter.request();
-  vt.define_image_counter((long int*)buffer.ptr, size);
+  vt.define_image_counter((int*)buffer.ptr, size);
+}
+
+void define_time_buffer(VideoThread& vt, pybind11::array_t<uint64_t>& counter)
+{
+  pybind11::buffer_info buffer = counter.request();
+  vt.define_time_buffer((uint64_t*)buffer.ptr);
 }
 
 PYBIND11_MODULE(bindings, m)
@@ -134,11 +140,15 @@ PYBIND11_MODULE(bindings, m)
     .def("get_info", &Camera::get_info)
     .def("capture", &capture);
 
-  pybind11::class_<VideoThread>(m, "VideoThread")
+  pybind11::class_<VideoThread,std::unique_ptr<VideoThread, pybind11::nodelete>>(m, "VideoThread")
   .def(pybind11::init<Camera*>())
   .def("addBuffer",&addBuffer)
   .def("define_image_counter",&define_image_counter)
+  .def("define_time_buffer",&define_time_buffer)
   .def("Start",&VideoThread::Start)
+  .def("Pause",&VideoThread::Pause)
+  .def("Resume",&VideoThread::Resume)
+  .def("Stop",&VideoThread::Stop)
   ;
 
 }

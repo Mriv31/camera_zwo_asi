@@ -7,6 +7,8 @@
 #include "zwo_asi/guide_direction.hpp"
 #include "zwo_asi/camera_attributes.hpp"
 #include "zwo_asi/roi.hpp"
+#include <thread>
+#include <chrono>
 
 namespace zwo_asi
 {

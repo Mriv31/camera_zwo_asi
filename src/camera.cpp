@@ -291,7 +291,11 @@ ASI_EXPOSURE_STATUS Camera::wait_for_status_change(
     ASI_EXPOSURE_STATUS status = get_exposition_status();
     while (status == current_status)
     {
+#ifdef _WIN32
+        std::this_thread::sleep_for(std::chrono::microseconds(123));
+#else
         usleep(500);
+#endif
         status = get_exposition_status();
     }
     return status;

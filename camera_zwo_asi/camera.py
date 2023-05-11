@@ -24,6 +24,7 @@ class Camera(bindings.Camera):
         # no idea why, camera may not be detected if this is not
         # called first
         nb_detected_cams = get_nb_cameras()
+        print("nb_detected_cams "+str(nb_detected_cams))
         super().__init__(index)
 
     def set_control(self, controllable: str, value: typing.Union[int, str]) -> None:
@@ -109,7 +110,7 @@ class Camera(bindings.Camera):
             non_writable: bool = False,
     )->typing.Dict[str,typing.Any]:
         """
-        Return a dictionary representation of the 
+        Return a dictionary representation of the
         current configuration of the camera, with the
         keys "roi" and the key "controllables".
         """
@@ -130,7 +131,7 @@ class Camera(bindings.Camera):
         d["roi"] = roi_d
 
         return d
-        
+
     def to_toml(
         self,
         path: Optional[Path] = None,

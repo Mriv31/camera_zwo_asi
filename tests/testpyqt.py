@@ -17,6 +17,15 @@ print(controls)
 print(roi.type)
 roi.type = ImageType.y8
 
+del(camera,roi,controls)
+
+camera = Camera(0)
+roi = camera.get_roi()
+controls = camera.get_controls()
+print(controls)
+print(roi.type)
+roi.type = ImageType.y8
+
 bins = 0
 if (bins):
     roi.height//=2

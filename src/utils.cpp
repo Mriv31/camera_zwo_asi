@@ -81,7 +81,13 @@ std::string run_system_command(std::string command)
     std::string result = "";
 
     // Open pipe to file
+#ifdef _WIN32
+    FILE* pipe = _popen(command.c_str(), "r");
+#else
     FILE* pipe = popen(command.c_str(), "r");
+
+#endif
+
     if (!pipe)
     {
         return "popen failed!";
@@ -93,8 +99,13 @@ std::string run_system_command(std::string command)
         // use buffer to read and add to result
         if (fgets(buffer, 128, pipe) != NULL) result += buffer;
     }
-
+#ifdef _WIN32
+    _pclose(pipe);
+#else
     pclose(pipe);
+
+#endif
+    
 
     return result;
 }

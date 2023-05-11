@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.18)
 
 project(zwo_asi VERSION 0.1)
-set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_EXTENSIONS ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_CXX_EXTENSIONS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_CXX_FLAGS_DEBUG "-g")
 #set(CMAKE_C_FLAGS_DEBUG "-g")
@@ -24,15 +24,26 @@ set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake
 find_package(Python3 COMPONENTS Interpreter Development)
 find_package(pybind11 REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
-find_package(USB REQUIRED)
 find_package(Threads REQUIRED)
-
+if(WIN32)
+else()
+find_package(USB REQUIRED)
+endif()
 
 
 ##########################
 # armv7 or x64 library ? #
 # ZWO library            #
 ##########################
+
+if(WIN32)
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(LIBASICAMERA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/asi_libs/win_x64/ASICamera2.lib)
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(LIBASICAMERA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/asi_libs/win_x86/ASICamera2.lib)
+endif()
+
+else()
 
 if(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7")
   set(LIBASICAMERA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/asi_libs/armv7/libASICamera2.a)
@@ -41,7 +52,7 @@ elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
 else()
   set(LIBASICAMERA_PATH ${CMAKE_CURRENT_SOURCE_DIR}/asi_libs/x64/libASICamera2.a)
 endif()
-
+endif()
 
 ###################################################
 # zwo_asi: library for higher level calls to the #
@@ -71,13 +82,13 @@ target_include_directories(zwo_asi PUBLIC
    $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
    ${ASI_INCLUDE_DIR}
    )
- #target_include_directories(Tracker PUBLIC
-   #$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/tracking>
-  # $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-# )
+
+ if(WIN32)
+ target_link_libraries(zwo_asi ${LIBASICAMERA_PATH}  Threads::Threads)
+ else()
  target_link_libraries(zwo_asi ${LIBASICAMERA_PATH} ${LIBUSB_LIBRARIES} Threads::Threads)
- #target_link_libraries(Tracker Threads::Threads m zwo_asi) ##ADDED MR
+
+endif()
 
 #################################
 # python bindings over zwo_asi #
@@ -94,7 +105,7 @@ set_target_properties(pybind11_bindings PROPERTIES
   OUTPUT_NAME "bindings"
   )
 target_link_libraries(pybind11_bindings
-  PUBLIC  zwo_asi::zwo_asi ${LIBASICAMERA_PATH}  #MODIFIED MR
+  PUBLIC  zwo_asi::zwo_asi ${LIBASICAMERA_PATH} 
   )
 
 ###########
@@ -102,7 +113,7 @@ target_link_libraries(pybind11_bindings
 ###########
 
 install(
-    TARGETS zwo_asi  #MODIFIED MR
+    TARGETS zwo_asi  
     EXPORT zwo_asiTargets
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}

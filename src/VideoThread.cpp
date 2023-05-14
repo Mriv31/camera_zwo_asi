@@ -42,6 +42,32 @@ void RunVideoThread(VideoThread *vt)
   }
   }
 
+  void VideoThread::increment_frames_to_analyze()
+  {
+    if (defined_image_counter)
+    {
+    if (mcv)
+    {
+      std::unique_lock lock(mcv->m_mutex);
+      *_frames_to_analyze = *_frames_to_analyze+1;
+      mcv->cv.notify_one();
+      lock.unlock();
+    }
+
+    else
+    {
+
+      *_frames_to_analyze = *_frames_to_analyze+1;
+
+    }
+
+
+  }
+
+
+    };
+
+
 void VideoThread::define_time_buffer(uint64_t *buffer)
 {
   if (defined_time_buffer) return;
@@ -99,6 +125,7 @@ VideoThread::VideoThread(Camera *camera)
   defined_image_counter = 0;
   cam = camera;
   stop = 0;
+  mcv = NULL;
 
   if (cam != NULL)
   {

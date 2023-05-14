@@ -1,4 +1,17 @@
 #include "zwo_asi/camera.hpp"
+#include <mutex>
+#include <condition_variable>
+
+
+class MutexCV {
+public:
+    MutexCV() = default;
+    void notify_one() { cv.notify_one(); };
+    std::mutex m_mutex;
+    std::condition_variable cv;
+
+
+};
 
 namespace zwo_asi
 {
@@ -30,10 +43,11 @@ public:
 
   int* get_frames_to_analyze(){return _frames_to_analyze;};
 
-  void increment_frames_to_analyze(){ if (defined_image_counter) {*_frames_to_analyze = *_frames_to_analyze+1;};};
+  void increment_frames_to_analyze();
   void define_image_counter(int *buffer, int size);
 
   void define_time_buffer(uint64_t *buffer);
+  void set_MutexCV(MutexCV* mtxcv) {mcv = mtxcv;};
 
 
 
@@ -42,6 +56,8 @@ public:
   int stop;
   int pause;
   uint64_t *time_buffer;
+
+  MutexCV* mcv;
 
 
 

@@ -40,6 +40,12 @@ void define_time_buffer(VideoThread& vt, pybind11::array_t<uint64_t>& counter)
   vt.define_time_buffer((uint64_t*)buffer.ptr);
 }
 
+void set_MutexCV(VideoThread&vt, pybind11::object obj)
+{
+  auto ptr = obj.cast<MutexCV *>();
+  vt.set_MutexCV(ptr);
+}
+
 PYBIND11_MODULE(bindings, m)
 {
 
@@ -140,6 +146,10 @@ PYBIND11_MODULE(bindings, m)
     .def("get_info", &Camera::get_info)
     .def("capture", &capture);
 
+
+//    pybind11::class_<MutexCV,std::unique_ptr<MutexCV, pybind11::nodelete>>(m, "MutexCV")
+//  .def(pybind11::init<>());
+
   pybind11::class_<VideoThread,std::unique_ptr<VideoThread, pybind11::nodelete>>(m, "VideoThread")
   .def(pybind11::init<Camera*>())
   .def("addBuffer",&addBuffer)
@@ -149,6 +159,7 @@ PYBIND11_MODULE(bindings, m)
   .def("Pause",&VideoThread::Pause)
   .def("Resume",&VideoThread::Resume)
   .def("Stop",&VideoThread::Stop)
+  .def("set_MutexCV",&VideoThread::set_MutexCV);
   ;
 
 }
